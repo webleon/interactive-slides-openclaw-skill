@@ -1,6 +1,6 @@
 # interactive-slides
 
-A Claude Code skill for creating interactive, animated web presentations — with 10 curated style presets, brand kit support, visual style discovery, a structured 6-phase workflow, and one-click PowerPoint export.
+A Claude Code skill for creating interactive, animated web presentations — with 10 curated style presets, brand kit support, visual style discovery, a structured 6-phase workflow, and one-click fully-editable PowerPoint export.
 
 ## What it does
 
