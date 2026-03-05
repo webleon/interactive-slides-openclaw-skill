@@ -197,23 +197,34 @@ User scrolls down to advance through the narrative. Best for async sharing, repo
 
 **Required CSS:**
 ```css
+/* Full-page snap scrolling — each scroll lands on a complete section */
+html {
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+  height: 100%;
+}
+
 body {
   margin: 0;
-  overflow-x: hidden;
+  height: 100%;
   background: var(--bg);
 }
 
 .story-section {
-  min-height: 100vh;
+  height: 100vh;               /* exact — snap requires fixed height, not min-height */
+  overflow: hidden;            /* clip content that exceeds one screen */
+  scroll-snap-align: start;
+  scroll-snap-stop: always;    /* prevents fast-scroll from skipping sections */
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5rem;        /* rem — scales with root font size scaler below */
+  padding: 5rem;               /* rem — scales with root font size scaler below */
   position: relative;
+  box-sizing: border-box;
 }
 
 .section-content {
-  max-width: 60rem;     /* rem — scales with root font size scaler below */
+  max-width: 60rem;            /* rem — scales with root font size scaler below */
   width: 100%;
 }
 
@@ -223,6 +234,8 @@ body {
   transform: translateY(28px);
 }
 ```
+
+> **scroll-snap-stop: always** is what makes "one section per scroll" work. Without it, a fast trackpad swipe can skip sections entirely. With it, every scroll gesture lands on exactly the next section — no exceptions.
 
 **Viewport-proportional scaling — REQUIRED for scroll stories:**
 
@@ -258,42 +271,34 @@ scaleStoryLayout(); // run on load
 
 > **Why root font size instead of clamp():** `clamp()` only scales font sizes, but the content column width (`max-width`) and padding stay fixed in `px` — so on a 2560px projector screen, you get bigger text inside the same 960px box. Root font scaling moves the entire layout together: fonts, padding, and column width all scale as one unit, giving the same proportional feel as `scaleToViewport()` on slide mode. The `Math.min(..., 2.5)` cap prevents runaway scaling on ultra-wide displays; `Math.max(..., 0.5)` keeps it readable on small screens.
 
-**ScrollTrigger setup — register the plugin, then wire up reveals:**
+**Reveal animation setup — use IntersectionObserver, NOT ScrollTrigger:**
+
+With CSS snap scrolling, sections jump into view rather than scrolling progressively through intermediate positions. ScrollTrigger's position-based triggers (`start: 'top 82%'`) can miss the snap moment entirely. Use IntersectionObserver instead — it fires when a section becomes visible regardless of how it got there (snap scroll, dot nav click, keyboard).
+
 ```javascript
-gsap.registerPlugin(ScrollTrigger);
+// Observe each section — when it snaps into view, animate its .reveal elements
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    const section = entry.target;
 
-// Reveal individual .reveal elements as they enter viewport
-document.querySelectorAll('.story-section .reveal').forEach(el => {
-  // Skip elements inside a .stagger-group (handled below)
-  if (el.closest('.stagger-group')) return;
-  gsap.to(el, {
-    opacity: 1,
-    y: 0,
-    duration: 0.7,
-    ease: 'power2.out',
-    scrollTrigger: {
-      trigger: el,
-      start: 'top 82%',       // fires when element top hits 82% down viewport
-      toggleActions: 'play none none none'
-    }
-  });
-});
+    // Individual .reveal elements (not inside a stagger-group)
+    const singles = [...section.querySelectorAll('.reveal')]
+      .filter(el => !el.closest('.stagger-group'));
+    gsap.to(singles, { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' });
 
-// Stagger children inside .stagger-group containers
-document.querySelectorAll('.stagger-group').forEach(group => {
-  gsap.to(group.querySelectorAll('.reveal'), {
-    opacity: 1,
-    y: 0,
-    duration: 0.6,
-    stagger: 0.1,
-    ease: 'power2.out',
-    scrollTrigger: {
-      trigger: group,
-      start: 'top 78%',
-      toggleActions: 'play none none none'
-    }
+    // Stagger groups — children animate in sequence
+    section.querySelectorAll('.stagger-group').forEach(group => {
+      gsap.to(group.querySelectorAll('.reveal'), {
+        opacity: 1, y: 0, duration: 0.6, stagger: 0.12, ease: 'power2.out'
+      });
+    });
+
+    revealObserver.unobserve(section); // animate once per section
   });
-});
+}, { threshold: 0.4 }); // fires when 40% of the section is visible
+
+document.querySelectorAll('.story-section').forEach(s => revealObserver.observe(s));
 ```
 
 **Reading progress bar (always include for scroll stories):**
