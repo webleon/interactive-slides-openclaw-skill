@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Slides OpenClaw Skill - 完整介绍</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #15151f;
+      --surface-light: #1e1e2d;
+      --accent: #6C47FF;
+      --accent-light: #8B6FFF;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0b0;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+      font-family: var(--font-body);
+    }
+    
+    .slides-wrapper {
+      position: fixed;
+      width: 1280px;
+      height: 720px;
+      overflow: hidden;
+    }
+    
+    .slide {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      padding: 3.5rem 5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: var(--bg);
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    /* Typography */
+    h1 {
+      font-family: var(--font-display);
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+    }
+    
+    h2 {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+    }
+    
+    h3 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+    }
+    
+    p, li {
+      font-size: 1.15rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+    }
+    
+    .eyebrow {
+      font-size: 0.875rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent-light);
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+    
+    .highlight {
+      color: var(--accent-light);
+    }
+    
+    .slide-intro {
+      text-align: left;
+    }
+    
+    .slide-intro .subtitle {
+      font-size: 1.4rem;
+      color: var(--text-secondary);
+      max-width: 650px;
+      margin-top: 1rem;
+    }
+    
+    /* Feature Grid */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    
+    .feature-card {
+      background: var(--surface);
+      padding: 1.75rem;
+      border-radius: 12px;
+      border-left: 4px solid var(--accent);
+    }
+    
+    .feature-card h3 {
+      margin-bottom: 0.5rem;
+    }
+    
+    .feature-card p {
+      font-size: 1rem;
+    }
+    
+    /* Comparison */
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+    
+    .comparison-item {
+      padding: 2rem;
+      border-radius: 12px;
+    }
+    
+    .comparison-item.traditional {
+      background: var(--surface);
+    }
+    
+    .comparison-item.modern {
+      background: linear-gradient(135deg, var(--accent) 0%, rgba(108, 71, 255, 0.3) 100%);
+    }
+    
+    .comparison-item h3 {
+      margin-bottom: 1rem;
+    }
+    
+    .comparison-list {
+      list-style: none;
+    }
+    
+    .comparison-list li {
+      padding: 0.5rem 0;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .comparison-list li::before {
+      content: "✕";
+      color: #ef4444;
+      font-weight: bold;
+    }
+    
+    .comparison-item.modern .comparison-list li::before {
+      content: "✓";
+      color: var(--success);
+    }
+    
+    /* Modes */
+    .mode-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    
+    .mode-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      background: var(--surface);
+      border-radius: 12px;
+    }
+    
+    .mode-number {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+      opacity: 0.5;
+      min-width: 50px;
+    }
+    
+    .mode-item h3 {
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+    
+    .mode-item p {
+      font-size: 1rem;
+    }
+    
+    /* Workflow */
+    .workflow-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    
+    .step {
+      background: var(--surface);
+      padding: 1.5rem;
+      border-radius: 12px;
+      text-align: center;
+    }
+    
+    .step-number {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin: 0 auto 1rem;
+    }
+    
+    .step-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+    
+    .step p {
+      font-size: 0.9rem;
+    }
+    
+    /* Code */
+    .code-block {
+      background: var(--surface);
+      padding: 1.5rem;
+      border-radius: 12px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 1.1rem;
+      color: var(--accent-light);
+      margin: 1.5rem 0;
+      border: 1px solid rgba(108, 71, 255, 0.2);
+    }
+    
+    /* Use Cases */
+    .use-case-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    
+    .use-case-card {
+      background: var(--surface);
+      padding: 1.25rem;
+      border-radius: 10px;
+      text-align: center;
+    }
+    
+    .use-case-icon {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .use-case-card p {
+      font-size: 0.95rem;
+    }
+    
+    /* Tech Stack */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+    
+    .tech-card {
+      background: var(--surface);
+      padding: 1.5rem;
+      border-radius: 12px;
+      text-align: center;
+    }
+    
+    .tech-icon {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .tech-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .tech-card p {
+      font-size: 0.9rem;
+    }
+    
+    /* Phase Detail */
+    .phase-detail {
+      margin-top: 1.5rem;
+    }
+    
+    .phase-item {
+      display: flex;
+      gap: 1.5rem;
+      padding: 1.25rem;
+      background: var(--surface);
+      border-radius: 10px;
+      margin-bottom: 1rem;
+    }
+    
+    .phase-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .phase-number {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--accent);
+      min-width: 40px;
+    }
+    
+    .phase-content h3 {
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+      font-size: 1.2rem;
+    }
+    
+    .phase-content p {
+      font-size: 1rem;
+    }
+    
+    /* CTA */
+    .cta-buttons {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+    }
+    
+    .btn {
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s;
+    }
+    
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--accent-light);
+      transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 2px solid var(--text-secondary);
+    }
+    
+    .btn-secondary:hover {
+      border-color: var(--text-primary);
+    }
+    
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    
+    .stat-card {
+      text-align: center;
+      padding: 2rem;
+      background: var(--surface);
+      border-radius: 12px;
+    }
+    
+    .stat-number {
+      font-family: var(--font-display);
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--accent-light);
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+    
+    /* Navigation dots */
+    .slide-dots {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 100;
+    }
+    
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-secondary);
+      opacity: 0.4;
+      cursor: pointer;
+      border: none;
+      padding: 0;
+      transition: all 0.3s;
+    }
+    
+    .dot.active {
+      background: var(--accent);
+      opacity: 1;
+      transform: scale(1.3);
+    }
+    
+    /* Progress bar */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: var(--accent);
+      z-index: 1000;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    
+    /* Slide number */
+    .slide-number {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="progress-bar" id="progressBar"></div>
+  
+  <div class="slides-wrapper">
+    
+    <!-- Slide 1: Title -->
+    <div class="slide active slide-intro" data-slide="0">
+      <div class="eyebrow">OpenClaw Skill</div>
+      <h1>Interactive<br><span class="highlight">Slides</span></h1>
+      <p class="subtitle">创建互动式、动画精美的 Web 演示文稿<br>单个 HTML 文件，任何浏览器都能打开，支持导出 PowerPoint</p>
+    </div>
+    
+    <!-- Slide 2: What is it -->
+    <div class="slide" data-slide="1">
+      <div class="eyebrow">是什么</div>
+      <h2>不是 PowerPoint<br>是<span class="highlight">活的</span>演示文稿</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>🌐 Web 原生</h3>
+          <p>单个 HTML 文件，无需安装任何软件，浏览器直接打开，可发布到 GitHub Pages 分享链接</p>
+        </div>
+        <div class="feature-card">
+          <h3>✨ 动画精美</h3>
+          <p>GSAP 驱动的流畅动画，专业级视觉效果，支持入场动画、转场、滚动触发</p>
+        </div>
+        <div class="feature-card">
+          <h3>📱 全平台兼容</h3>
+          <p>键盘、鼠标、触摸、滚轮 — 四种导航方式，支持无障碍访问 (ARIA)</p>
+        </div>
+        <div class="feature-card">
+          <h3>📤 可导出 PPTX</h3>
+          <p>需要编辑？一键导出 PowerPoint 格式，保留所有文字和结构</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 3: Comparison -->
+    <div class="slide" data-slide="2">
+      <div class="eyebrow">为什么选择 Web</div>
+      <h2>传统 PPT vs Web 演示</h2>
+      <div class="comparison">
+        <div class="comparison-item traditional">
+          <h3>❌ 传统 PPT</h3>
+          <ul class="comparison-list">
+            <li>需要 PowerPoint 或 Keynote</li>
+            <li>文件大，传输慢</li>
+            <li>动画生硬，效果有限</li>
+            <li>版本兼容性问题</li>
+            <li>无法在线分享（需文件）</li>
+          </ul>
+        </div>
+        <div class="comparison-item modern">
+          <h3>✅ Web 演示</h3>
+          <ul class="comparison-list">
+            <li>任何浏览器都能打开</li>
+            <li>单个 HTML 文件，轻量</li>
+            <li>GSAP 电影级动画</li>
+            <li>跨平台完美兼容</li>
+            <li>一个 URL 即可分享</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 4: Three Modes -->
+    <div class="slide" data-slide="3">
+      <div class="eyebrow">三种模式</div>
+      <h2>适合不同场景</h2>
+      <div class="mode-list">
+        <div class="mode-item">
+          <div class="mode-number">01</div>
+          <div>
+            <h3>幻灯片模式 (Slide Deck)</h3>
+            <p>经典演示体验，键盘/点击导航，每页全屏，带动画转场。<strong>适合：现场演讲、投资人 Pitch、技术分享</strong></p>
+          </div>
+        </div>
+        <div class="mode-item">
+          <div class="mode-number">02</div>
+          <div>
+            <h3>滚动故事模式 (Scroll Story)</h3>
+            <p>向下滚动浏览，像交互式文章，每屏自动吸附，内容渐进式呈现。<strong>适合：异步分享、年度报告、作品集、长文报告</strong></p>
+          </div>
+        </div>
+        <div class="mode-item">
+          <div class="mode-number">03</div>
+          <div>
+            <h3>互动 Deck 模式 (Interactive)</h3>
+            <p>幻灯片基础上嵌入互动元素：测验、分支选择、计算器、数据筛选。<strong>适合：培训、产品 Demo、互动提案</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 5: 6 Phases Overview -->
+    <div class="slide" data-slide="4">
+      <div class="eyebrow">专业流程</div>
+      <h2>6 个阶段，确保质量</h2>
+      <div class="workflow-steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-title">需求探索</div>
+          <p>受众、目标、场景</p>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-title">内容处理</div>
+          <p>Ghost List 确认</p>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-title">选择模式</div>
+          <p>幻灯片/滚动/互动</p>
+        </div>
+        <div class="step">
+          <div class="step-number">4</div>
+          <div class="step-title">构建</div>
+          <p>HTML + GSAP 动画</p>
+        </div>
+        <div class="step">
+          <div class="step-number">5</div>
+          <div class="step-title">预览迭代</div>
+          <p>调整内容/样式</p>
+        </div>
+        <div class="step">
+          <div class="step-number">6</div>
+          <div class="step-title">PPT 导出</div>
+          <p>可选 PowerPoint</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 6: Phase Details -->
+    <div class="slide" data-slide="5">
+      <div class="eyebrow">工作流程详解</div>
+      <h2>每个阶段都专业</h2>
+      <div class="phase-detail">
+        <div class="phase-item">
+          <div class="phase-number">01</div>
+          <div class="phase-content">
+            <h3>需求探索</h3>
+            <p>了解受众（高管/技术/投资人）、核心信息、交付方式（现场/异步）、品牌风格</p>
+          </div>
+        </div>
+        <div class="phase-item">
+          <div class="phase-number">02</div>
+          <div class="phase-content">
+            <h3>内容处理</h3>
+            <p>生成 Ghost List（每页标题 + 要点），确认结构后再构建，避免返工</p>
+          </div>
+        </div>
+        <div class="phase-item">
+          <div class="phase-number">03</div>
+          <div class="phase-content">
+            <h3>风格选择</h3>
+            <p>提供 3 个预设风格预览，或应用品牌 Kit（颜色 + 字体 + Logo）</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 7: Phase Details 2 -->
+    <div class="slide" data-slide="6">
+      <div class="eyebrow">工作流程详解</div>
+      <h2>构建与交付</h2>
+      <div class="phase-detail">
+        <div class="phase-item">
+          <div class="phase-number">04</div>
+          <div class="phase-content">
+            <h3>构建</h3>
+            <p>单 HTML 文件，内联 CSS + JS，GSAP 动画，响应式布局，无需服务器</p>
+          </div>
+        </div>
+        <div class="phase-item">
+          <div class="phase-number">05</div>
+          <div class="phase-content">
+            <h3>预览迭代</h3>
+            <p>浏览器打开预览，可调整内容、样式、动画，支持多轮迭代</p>
+          </div>
+        </div>
+        <div class="phase-item">
+          <div class="phase-number">06</div>
+          <div class="phase-content">
+            <h3>PPT 导出</h3>
+            <p>可选导出 .pptx 格式，使用 pptxgenjs，保留文字和结构，方便后续编辑</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 8: Installation -->
+    <div class="slide" data-slide="7">
+      <div class="eyebrow">快速开始</div>
+      <h2>一行命令安装</h2>
+      <div class="code-block">clawhub install interactive-slides-openclaw-skill</div>
+      <p>或者手动克隆：</p>
+      <div class="code-block" style="background: transparent; border: 1px solid var(--text-secondary);">git clone https://github.com/webleon/interactive-slides-openclaw-skill.git</div>
+      <p style="margin-top: 1.5rem; font-size: 1rem;">安装后，在 OpenClaw 中直接使用：</p>
+      <div class="code-block">帮我做个产品介绍，给投资人看的</div>
+    </div>
+    
+    <!-- Slide 9: Use Cases -->
+    <div class="slide" data-slide="8">
+      <div class="eyebrow">适用场景</div>
+      <h2>任何需要<span class="highlight">展示</span>的时刻</h2>
+      <div class="use-case-grid">
+        <div class="use-case-card">
+          <div class="use-case-icon">🚀</div>
+          <p>创业 Pitch</p>
+        </div>
+        <div class="use-case-card">
+          <div class="use-case-icon">📊</div>
+          <p>数据报告</p>
+        </div>
+        <div class="use-case-card">
+          <div class="use-case-icon">💼</div>
+          <p>项目提案</p>
+        </div>
+        <div class="use-case-card">
+          <div class="use-case-icon">🎓</div>
+          <p>技术分享</p>
+        </div>
+        <div class="use-case-card">
+          <div class="use-case-icon">📚</div>
+          <p>培训材料</p>
+        </div>
+        <div class="use-case-card">
+          <div class="use-case-icon">🎨</div>
+          <p>作品集</p>
+        </div>
+        <div class="use-case-card">
+          <div class="use-case-icon">📈</div>
+          <p>产品介绍</p>
+        </div>
+        <div class="use-case-card">
+          <div class="use-case-icon">🏢</div>
+          <p>内部汇报</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 10: Tech Stack -->
+    <div class="slide" data-slide="9">
+      <div class="eyebrow">技术特点</div>
+      <h2>专业级技术栈</h2>
+      <div class="tech-grid">
+        <div class="tech-card">
+          <div class="tech-icon">🎬</div>
+          <h3>GSAP 3.12</h3>
+          <p>业界最强动画库</p>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon">📐</div>
+          <h3>CSS Grid</h3>
+          <p>响应式布局</p>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon">🎨</div>
+          <h3>CSS 变量</h3>
+          <p>主题定制</p>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon">⌨️</div>
+          <h3>键盘导航</h3>
+          <p>← → 空格键</p>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon">📱</div>
+          <h3>触摸支持</h3>
+          <p>滑动切换</p>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon">♿</div>
+          <h3>无障碍</h3>
+          <p>ARIA 标签</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 11: Key Features -->
+    <div class="slide" data-slide="10">
+      <div class="eyebrow">核心功能</div>
+      <h2>细节决定体验</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>🎯 视口自适应</h3>
+          <p>自动缩放适配任何分辨率，投影仪/全屏/手机都完美显示</p>
+        </div>
+        <div class="feature-card">
+          <h3>🎨 风格预设</h3>
+          <p>10+ 专业风格可选（Executive Dark、Aurora、Swiss Grid 等）</p>
+        </div>
+        <div class="feature-card">
+          <h3>🎭 品牌定制</h3>
+          <p>支持品牌 Kit：颜色、字体、Logo，或从 Canva/PPT 模板导入</p>
+        </div>
+        <div class="feature-card">
+          <h3>📊 图表支持</h3>
+          <p>集成 Chart.js，可创建动态数据可视化</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 12: Stats -->
+    <div class="slide" data-slide="11">
+      <div class="eyebrow">效果对比</div>
+      <h2>为什么值得用</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">10x</div>
+          <div class="stat-label">更小的文件大小<br>（相比 PPTX）</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">100%</div>
+          <div class="stat-label">跨平台兼容<br>（任何浏览器）</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">60fps</div>
+          <div class="stat-label">流畅动画<br>（GSAP 驱动）</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 13: CTA -->
+    <div class="slide" data-slide="12">
+      <div class="eyebrow">开始使用</div>
+      <h2>让你的演示<br><span class="highlight">令人难忘</span></h2>
+      <p>告别枯燥的 PPT，创建真正互动的 Web 演示文稿</p>
+      <div class="cta-buttons">
+        <a href="https://github.com/webleon/interactive-slides-openclaw-skill" class="btn btn-primary" target="_blank">🔗 GitHub 仓库</a>
+        <a href="https://github.com/webleon/interactive-slides-openclaw-skill" class="btn btn-secondary" target="_blank">查看文档 →</a>
+      </div>
+    </div>
+    
+  </div>
+  
+  <nav class="slide-dots" aria-label="Slide navigation"></nav>
+  <div class="slide-number" id="slideNumber">1 / 13</div>
+  
+  <script>
+    // === VIEWPORT SCALING ===
+    const SLIDE_W = 1280;
+    const SLIDE_H = 720;
+    const slidesWrapper = document.querySelector('.slides-wrapper');
+    const slides = document.querySelectorAll('.slide');
+    
+    function scaleToViewport() {
+      const scaleX = window.innerWidth / SLIDE_W;
+      const scaleY = window.innerHeight / SLIDE_H;
+      const scale = Math.min(scaleX, scaleY);
+      const offsetX = (window.innerWidth - SLIDE_W * scale) / 2;
+      const offsetY = (window.innerHeight - SLIDE_H * scale) / 2;
+      slidesWrapper.style.transform = `scale(${scale})`;
+      slidesWrapper.style.transformOrigin = '0 0';
+      slidesWrapper.style.left = offsetX + 'px';
+      slidesWrapper.style.top = offsetY + 'px';
+    }
+    
+    window.addEventListener('resize', scaleToViewport);
+    document.addEventListener('fullscreenchange', scaleToViewport);
+    scaleToViewport();
+    
+    // === NAVIGATION ===
+    let currentSlide = 0;
+    const totalSlides = slides.length;
+    
+    function goToSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= totalSlides) index = totalSlides - 1;
+      
+      slides[currentSlide].classList.remove('active');
+      slides[index].classList.add('active');
+      currentSlide = index;
+      
+      // Update dots
+      document.querySelectorAll('.dot').forEach((d, i) => {
+        d.classList.toggle('active', i === index);
+      });
+      
+      // Update slide number
+      document.getElementById('slideNumber').textContent = `${index + 1} / ${totalSlides}`;
+      
+      // Update progress bar
+      document.getElementById('progressBar').style.width = ((index + 1) / totalSlides * 100) + '%';
+      
+      // Animate content
+      animateSlide(index);
+    }
+    
+    function nextSlide() { goToSlide(currentSlide + 1); }
+    function prevSlide() { goToSlide(currentSlide - 1); }
+    
+    // Build dots
+    function buildDots() {
+      const nav = document.querySelector('.slide-dots');
+      slides.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'dot' + (i === 0 ? ' active' : '');
+        dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
+        dot.addEventListener('click', (e) => { e.stopPropagation(); goToSlide(i); });
+        nav.appendChild(dot);
+      });
+    }
+    buildDots();
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+    });
+    
+    // Click zones
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('button, a')) return;
+      if (e.clientX > window.innerWidth / 2) nextSlide();
+      else prevSlide();
+    });
+    
+    // Touch/swipe
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    document.addEventListener('touchend', (e) => {
+      const delta = touchStartX - e.changedTouches[0].clientX;
+      if (Math.abs(delta) > 50) delta > 0 ? nextSlide() : prevSlide();
+    }, { passive: true });
+    
+    // Mouse wheel
+    let wheelCooldown = false;
+    document.addEventListener('wheel', (e) => {
+      if (wheelCooldown) return;
+      wheelCooldown = true;
+      setTimeout(() => wheelCooldown = false, 800);
+      e.deltaY > 0 ? nextSlide() : prevSlide();
+    }, { passive: true });
+    
+    // === ANIMATIONS ===
+    function animateSlide(index) {
+      const slide = slides[index];
+      const elements = slide.querySelectorAll('h1, h2, h3, p, .feature-card, .mode-item, .step, .code-block, .tag, .tech-card, .btn, .subtitle, .comparison-item, .phase-item, .use-case-card, .stat-card');
+      
+      gsap.fromTo(elements, 
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.6, stagger: 0.06, ease: 'power2.out', delay: 0.1 }
+      );
+    }
+    
+    // Animate first slide
+    animateSlide(0);
+    
+    // Reduced motion
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      gsap.globalTimeline.timeScale(0.01);
+    }
+  </script>
+</body>
+</html>
