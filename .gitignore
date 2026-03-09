@@ -1,5 +1,6 @@
 # 输出文件
 output/*.html
+demo/*.pdf
 
 # 日志
 log/*.log
@@ -12,3 +13,6 @@ Thumbs.db
 *.tmp
 *.swp
 *~
+
+# Node.js
+node_modules/

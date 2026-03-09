@@ -1,0 +1,27 @@
+{
+  "name": "interactive-slides-openclaw-skill",
+  "version": "1.0.0",
+  "description": "**AI 驱动交互式演示文稿生成器** · 完整复刻原项目功能",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webleon/interactive-slides-openclaw-skill.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/webleon/interactive-slides-openclaw-skill/issues"
+  },
+  "homepage": "https://github.com/webleon/interactive-slides-openclaw-skill#readme",
+  "dependencies": {
+    "playwright": "^1.58.2"
+  }
+}
