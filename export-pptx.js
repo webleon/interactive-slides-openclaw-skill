@@ -17,6 +17,7 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
+const PptxGenJS = require('pptxgenjs');
 
 async function exportPptx(inputFile, outputFile) {
   console.log('📊 Interactive Slides PPTX 导出工具（高保真）');
@@ -52,11 +53,7 @@ async function exportPptx(inputFile, outputFile) {
     process.exit(1);
   }
   
-  // 设置下载目录
-  const downloadDir = path.resolve(path.dirname(outputFile));
-  const outputFileName = path.basename(outputFile, '.pptx');
-  
-  // 启动浏览器（带下载配置）
+  // 启动浏览器
   console.log('🌐 启动浏览器...');
   const browser = await chromium.launch({
     headless: true,
@@ -64,13 +61,10 @@ async function exportPptx(inputFile, outputFile) {
   });
   
   const context = await browser.newContext({
-    acceptDownloads: true,
-    downloadsPath: downloadDir
-  });
-  
-  const page = await context.newPage({
     viewport: { width: 1280, height: 720 }
   });
+  
+  const page = await context.newPage();
   
   // 加载 HTML
   const fileUrl = 'file://' + path.resolve(inputFile);
@@ -84,70 +78,94 @@ async function exportPptx(inputFile, outputFile) {
   console.log('⏳ 等待动画完成...');
   await page.waitForTimeout(2000);
   
-  // 注入 dom-to-pptx 并执行导出
-  console.log('🎨 转换 PPTX（高保真模式）...');
+  // 获取所有幻灯片
+  const slides = await page.$$('.slide');
+  console.log(`🎨 开始转换 ${slides.length} 页幻灯片...`);
   
   try {
-    // 设置下载监听器
-    const [download] = await Promise.all([
-      // 等待下载
-      page.waitForEvent('download'),
-      
-      // 执行导出（会触发下载）
-      page.evaluate(async (outputFileName) => {
-        // 动态加载 dom-to-pptx
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/dom-to-pptx@latest/dist/dom-to-pptx.bundle.js';
-        document.head.appendChild(script);
-        
-        await new Promise(resolve => script.onload = resolve);
-        
-        // 临时修改样式以便导出
-        const style = document.createElement('style');
-        style.textContent = `
-          .slides-wrapper {
-            position: relative !important;
-            width: 1280px !important;
-            height: auto !important;
-            overflow: visible !important;
-            transform: none !important;
-          }
-          .slide {
-            position: relative !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            display: block !important;
-            height: 720px !important;
-            margin-bottom: 20px;
-          }
-          .slide-dots, .slide-number, .progress-bar {
-            display: none !important;
-          }
-        `;
-        document.head.appendChild(style);
-        
-        // 等待样式应用
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // 导出 PPTX
-        await window.domToPptx.exportToPptx('.slides-wrapper', {
-          fileName: outputFileName,
-          svgAsVector: true
-        });
-        
-        return { success: true };
-      }, outputFileName)
-    ]);
+    // 创建 PPTX
+    const pptx = new PptxGenJS();
     
-    // 保存下载的文件
+    // 设置文档属性
+    pptx.title = 'Interactive Slides Presentation';
+    pptx.author = 'Interactive Slides Skill';
+    pptx.company = 'OpenClaw';
+    
+    // 逐页导出
+    for (let i = 0; i < slides.length; i++) {
+      console.log(`  处理第 ${i + 1}/${slides.length} 页...`);
+      
+      // 显示当前幻灯片，隐藏其他
+      await page.evaluate((index) => {
+        document.querySelectorAll('.slide').forEach((slide, i) => {
+          if (i === index) {
+            slide.style.visibility = 'visible';
+            slide.style.opacity = '1';
+            slide.style.display = 'block';
+          } else {
+            slide.style.visibility = 'hidden';
+            slide.style.opacity = '0';
+            slide.style.display = 'none';
+          }
+        });
+      }, i);
+      
+      // 等待渲染
+      await page.waitForTimeout(500);
+      
+      // 截取幻灯片为图片
+      const screenshot = await page.screenshot({
+        type: 'png',
+        clip: { x: 0, y: 0, width: 1280, height: 720 },
+        omitBackground: false
+      });
+      
+      // 添加到 PPTX（作为图片）
+      const slide = pptx.addSlide();
+      
+      // 保存临时文件（使用绝对路径）
+      const tempDir = '/tmp/interactive-slides-export';
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+      const tempFile = path.join(tempDir, `slide-${i}.png`);
+      fs.writeFileSync(tempFile, screenshot);
+      
+      // 添加图片到幻灯片（16:9 比例）
+      slide.addImage({ 
+        path: tempFile,
+        x: 0, 
+        y: 0, 
+        w: '100%', 
+        h: '100%'
+      });
+    }
+    
+    // 保存 PPTX
     console.log(`💾 保存文件：${outputFile}`);
-    await download.saveAs(outputFile);
+    const result = await pptx.writeFile({ 
+      fileName: path.basename(outputFile, '.pptx')
+    });
+    
+    // 移动到正确位置（pptxgenjs 保存到当前目录）
+    const defaultFile = path.join(process.cwd(), path.basename(outputFile, '.pptx') + '.pptx');
+    if (fs.existsSync(defaultFile)) {
+      if (defaultFile !== outputFile) {
+        fs.renameSync(defaultFile, outputFile);
+      }
+    }
+    
+    // 清理临时文件
+    const tempDir = '/tmp/interactive-slides-export';
+    if (fs.existsSync(tempDir)) {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
     
     await browser.close();
     
     console.log('=' .repeat(60));
     console.log('✅ PPTX 导出完成！');
-    console.log(`📊 幻灯片数：${slideCount}`);
+    console.log(`📊 幻灯片数：${slides.length}`);
     console.log(`📁 输出文件：${outputFile}`);
     console.log('🎨 还原度：95%+（高保真模式）');
     console.log('✨ 完成！');
@@ -155,7 +173,7 @@ async function exportPptx(inputFile, outputFile) {
   } catch (error) {
     await browser.close();
     console.error('❌ 导出失败:', error.message);
-    console.error('\n💡 提示：dom-to-pptx 可能还在测试阶段，建议使用 PDF 导出作为备选');
+    console.error(error.stack);
     process.exit(1);
   }
 }
