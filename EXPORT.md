@@ -1,6 +1,6 @@
 # Interactive Slides 导出指南
 
-本 Skill 支持将 HTML 演示文稿导出为 PDF 和 PPTX 格式。
+本 Skill 支持将 HTML 演示文稿导出为 PDF 格式，方便分享和打印。
 
 ---
 
@@ -9,7 +9,6 @@
 | 格式 | 还原度 | 可编辑性 | 推荐场景 |
 |------|--------|---------|---------|
 | **PDF** | ⭐⭐⭐⭐⭐ 100% | ❌ 不可编辑 | 分享、打印、存档 |
-| **PPTX** | ⭐⭐⭐ 60-75% | ✅ 完全可编辑 | 二次编辑、协作 |
 | **HTML** | ⭐⭐⭐⭐⭐ 100% | ⚠️ 有限 | 在线演示、交互 |
 
 ---
@@ -50,60 +49,6 @@ node export-pdf.js demo/index.html demo/my-presentation.pdf
 
 ---
 
-## 📦 PPTX 导出（高保真 ⭐⭐⭐⭐）
-
-**95%+ 还原度，完全可编辑**
-
-### 安装依赖
-
-```bash
-cd ~/.openclaw/workspace/skills/interactive-slides-openclaw-skill
-npm install
-```
-
-### 使用方法
-
-**自动命名：**
-```bash
-node export-pptx.js demo/index.html
-# 输出：demo/interactive-slides-openclaw-skill_20260310.pptx
-```
-
-**自定义输出文件：**
-```bash
-node export-pptx.js demo/index.html demo/my-presentation.pptx
-```
-
-### PPTX 规格
-
-| 属性 | 值 |
-|------|-----|
-| **还原度** | 95%+（高保真） |
-| **可编辑性** | ✅ 完全可编辑 |
-| **渐变** | ✅ 支持（截图方式） |
-| **阴影** | ✅ 支持（截图方式） |
-| **圆角** | ✅ 支持（截图方式） |
-| **模糊滤镜** | ✅ 支持（截图方式） |
-| **字体** | ✅ 完美保留 |
-| **布局** | ✅ 100% 还原 |
-
-### 技术原理
-
-**方案：截图 + PptxGenJS**
-
-1. 使用 Playwright 启动 headless Chrome
-2. 逐页截取幻灯片为 PNG 图片
-3. 使用 PptxGenJS 将图片添加到 PPTX
-4. 每页幻灯片 = 一张全屏图片
-
-**优势：**
-- ✅ 100% 还原 HTML 样式
-- ✅ 支持所有 CSS 特性
-- ✅ 完全可编辑（可添加文本框、形状等）
-- ✅ 文件大小合理（约 50-100KB/页）
-
----
-
 ## 📁 文件命名规则
 
 **格式：** `{标题}_{日期}.{格式}`
@@ -112,8 +57,7 @@ node export-pptx.js demo/index.html demo/my-presentation.pptx
 ```
 demo/
 ├── index.html                                          ← 原始 HTML
-├── interactive-slides-openclaw-skill_20260310.pdf      ← 导出的 PDF
-└── interactive-slides-openclaw-skill_20260310.pptx     ← 导出的 PPTX
+└── interactive-slides-openclaw-skill_20260310.pdf      ← 导出的 PDF
 ```
 
 **标题来源：** 从 HTML `<title>` 标签自动提取
@@ -127,17 +71,15 @@ demo/
 | **现场演示** | HTML（浏览器打开） | 完美动画和交互 |
 | **分享给他人** | PDF | 兼容性好，无需浏览器 |
 | **打印** | PDF | 保持 16:9 比例 |
-| **二次编辑** | PPTX | ✅ 完全可编辑，95% 还原 |
 | **在线发布** | HTML + GitHub Pages | 可交互、可分享 |
 
 ---
 
 ## ⚠️ 注意事项
 
-1. **PPTX 导出限制** - dom-to-pptx 是浏览器端库，无法在 Node.js 服务端使用
-2. **PDF 是静态的** - 不包含动画效果
-3. **保持 16:9 比例** - 打印时选择"适应页面"避免裁剪
-4. **字体嵌入** - PDF 会嵌入字体，PPTX 可能需要手动映射
+1. **PDF 是静态的** - 不包含动画效果
+2. **保持 16:9 比例** - 打印时选择"适应页面"避免裁剪
+3. **字体嵌入** - PDF 会嵌入字体
 
 ---
 
@@ -151,17 +93,11 @@ demo/
 
 **解决：** 打印时选择"无边距"或"适应页面"
 
-### 问题：PPTX 导出失败
-
-**原因：** dom-to-pptx 需要 Chromium 浏览器
-
-**解决：** 确保已安装 Playwright (`npm install`)
-
 ---
 
 ## 📚 技术说明
 
-### PPTX 导出原理
+### PDF 导出原理
 
 **工作流程：**
 ```
@@ -169,19 +105,18 @@ HTML 文件
    ↓
 Playwright (headless Chrome)
    ↓
-注入 dom-to-pptx 脚本
+加载 HTML + 等待动画
    ↓
-浏览器中执行导出
+注入 CSS（重新布局为垂直排列）
    ↓
-监听下载事件
-   ↓
-保存为 .pptx 文件
+生成 PDF（横向，无白边）
 ```
 
 **技术优势：**
-- ✅ 完整的浏览器环境（支持所有 CSS 特性）
-- ✅ 自动下载保存（无需手动操作）
-- ✅ 高保真转换（95%+ 还原度）
+- ✅ 100% 还原 HTML 样式
+- ✅ 保留所有视觉效果
+- ✅ 多页幻灯片自动分页
+- ✅ 高质量输出（2x 缩放）
 
 ---
 
