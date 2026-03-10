@@ -1,6 +1,7 @@
 # 输出文件
 output/*.html
 demo/*.pdf
+demo/*.pptx
 
 # 日志
 log/*.log
