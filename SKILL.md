@@ -71,8 +71,7 @@ Always ask this before generating any style preview. Frame it as a simple choice
 |-------|----------------|
 | **Hex colors + font names** | Paste directly: `"primary: #2B4EFF, accent: #FF5733, body font: Helvetica Neue"` |
 | **Logo file** | File path or URL — placed on every slide |
-| **PPT template** | `.pptx` file path — optional reference for visual style |
-| **Canva Brand Kit** | In Canva: Brand Kit → copy hex colors + font names, or Share → Download → PowerPoint to get a template file |
+| **Canva Brand Kit** | In Canva: Brand Kit → copy hex colors + font names |
 
 Apply the brand colors to the HTML by creating a custom `:root {}` block instead of using a preset. Map their colors to `--bg`, `--accent`, `--text-primary`, `--text-secondary`, `--surface`. Load their fonts from Google Fonts if available.
 
