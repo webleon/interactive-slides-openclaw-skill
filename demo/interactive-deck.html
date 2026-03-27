@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Demo - Interactive Deck</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-light: #334155;
+      --accent: #3b82f6;
+      --accent-light: #60a5fa;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+      font-family: var(--font-body);
+    }
+    
+    .slides-wrapper {
+      position: fixed;
+      width: 1280px;
+      height: 720px;
+      overflow: hidden;
+    }
+    
+    .slide {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      padding: 3.5rem 5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: var(--bg);
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    /* Typography */
+    .eyebrow {
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+    
+    h1 {
+      font-family: var(--font-display);
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+    }
+    
+    h2 {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+    }
+    
+    p {
+      font-size: 1.15rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+    }
+    
+    /* Interactive Quiz */
+    .quiz-container {
+      background: var(--surface);
+      padding: 2rem;
+      border-radius: 16px;
+      margin-top: 2rem;
+    }
+    
+    .quiz-question {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+    }
+    
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .quiz-option {
+      padding: 1.25rem;
+      background: var(--surface-light);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+    }
+    
+    .quiz-option:hover {
+      background: var(--accent);
+      transform: translateX(10px);
+    }
+    
+    .quiz-option.selected {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.2);
+    }
+    
+    .quiz-option.correct {
+      border-color: var(--success);
+      background: rgba(16, 185, 129, 0.2);
+    }
+    
+    .quiz-option.incorrect {
+      border-color: var(--danger);
+      background: rgba(239, 68, 68, 0.2);
+    }
+    
+    .quiz-feedback {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      display: none;
+    }
+    
+    .quiz-feedback.correct {
+      display: block;
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+    }
+    
+    .quiz-feedback.incorrect {
+      display: block;
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+    }
+    
+    /* Expandable Panel */
+    .expandable-section {
+      margin-top: 2rem;
+    }
+    
+    .expandable-item {
+      margin-bottom: 1rem;
+    }
+    
+    .expandable-header {
+      padding: 1.25rem;
+      background: var(--surface);
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s;
+    }
+    
+    .expandable-header:hover {
+      background: var(--surface-light);
+    }
+    
+    .expandable-title {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .expandable-icon {
+      font-size: 1.5rem;
+      transition: transform 0.3s;
+    }
+    
+    .expandable-item.active .expandable-icon {
+      transform: rotate(45deg);
+    }
+    
+    .expandable-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+      padding: 0 1rem;
+    }
+    
+    .expandable-item.active .expandable-content {
+      max-height: 500px;
+      padding: 1rem;
+      margin-top: 0.5rem;
+    }
+    
+    .expandable-body {
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    
+    /* Branch Selection */
+    .branch-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    
+    .branch-card {
+      padding: 2rem;
+      background: var(--surface);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+    }
+    
+    .branch-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--accent);
+    }
+    
+    .branch-card.selected {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.1);
+    }
+    
+    .branch-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .branch-desc {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+    }
+    
+    /* Data Filter */
+    .filter-container {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    
+    .filter-btn {
+      padding: 0.75rem 1.5rem;
+      background: var(--surface);
+      border: 2px solid var(--surface-light);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .filter-btn:hover {
+      border-color: var(--accent);
+    }
+    
+    .filter-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    
+    .chart-container {
+      background: var(--surface);
+      padding: 2rem;
+      border-radius: 12px;
+      height: 400px;
+    }
+    
+    /* Navigation */
+    .slide-dots {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 100;
+    }
+    
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-secondary);
+      opacity: 0.4;
+      cursor: pointer;
+      border: none;
+      padding: 0;
+      transition: all 0.3s;
+    }
+    
+    .dot.active {
+      background: var(--accent);
+      opacity: 1;
+      transform: scale(1.3);
+    }
+    
+    .slide-number {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      opacity: 0.5;
+    }
+    
+    /* Progress Bar */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: var(--accent);
+      z-index: 1000;
+      width: 0%;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <div class="progress-bar" id="progressBar"></div>
+  
+  <div class="slides-wrapper">
+    
+    <!-- Slide 1: Title -->
+    <div class="slide active" data-slide="0">
+      <div class="eyebrow">Interactive Demo</div>
+      <h1>Interactive<br><span style="color: var(--accent);">Deck Mode</span></h1>
+      <p>Experience interactive elements: quizzes, expandable panels, branch selection, and data filters.</p>
+    </div>
+    
+    <!-- Slide 2: Quiz -->
+    <div class="slide" data-slide="1">
+      <div class="eyebrow">Interactive Element #1</div>
+      <h2>Knowledge Quiz</h2>
+      <p>Test your understanding with interactive quizzes.</p>
+      
+      <div class="quiz-container">
+        <div class="quiz-question">What is the primary benefit of Web-based presentations?</div>
+        <div class="quiz-options">
+          <div class="quiz-option" data-correct="false">A) Requires PowerPoint installation</div>
+          <div class="quiz-option" data-correct="true">B) Works in any browser, no installation needed</div>
+          <div class="quiz-option" data-correct="false">C) Only works on Windows</div>
+          <div class="quiz-option" data-correct="false">D) Cannot be shared online</div>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+    
+    <!-- Slide 3: Expandable Panels -->
+    <div class="slide" data-slide="2">
+      <div class="eyebrow">Interactive Element #2</div>
+      <h2>Expandable Details</h2>
+      <p>Click to reveal more information on demand.</p>
+      
+      <div class="expandable-section">
+        <div class="expandable-item">
+          <div class="expandable-header">
+            <span class="expandable-title">📊 Feature 1: Real-time Analytics</span>
+            <span class="expandable-icon">+</span>
+          </div>
+          <div class="expandable-content">
+            <div class="expandable-body">
+              Track engagement metrics in real-time. See which slides get the most attention, how long viewers spend on each section, and where they drop off. Perfect for optimizing your presentations.
+            </div>
+          </div>
+        </div>
+        
+        <div class="expandable-item">
+          <div class="expandable-header">
+            <span class="expandable-title">🎨 Feature 2: Custom Branding</span>
+            <span class="expandable-icon">+</span>
+          </div>
+          <div class="expandable-content">
+            <div class="expandable-body">
+              Apply your brand colors, fonts, and logo automatically. Every presentation maintains brand consistency without manual adjustments.
+            </div>
+          </div>
+        </div>
+        
+        <div class="expandable-item">
+          <div class="expandable-header">
+            <span class="expandable-title">🔄 Feature 3: Version Control</span>
+            <span class="expandable-icon">+</span>
+          </div>
+          <div class="expandable-content">
+            <div class="expandable-body">
+              Track changes, compare versions, and roll back if needed. Built on Git, every change is saved and can be reviewed.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 4: Branch Selection -->
+    <div class="slide" data-slide="3">
+      <div class="eyebrow">Interactive Element #3</div>
+      <h2>Choose Your Path</h2>
+      <p>Select the track that interests you most.</p>
+      
+      <div class="branch-container">
+        <div class="branch-card" data-branch="technical">
+          <div class="branch-title">🔧 Technical Deep Dive</div>
+          <div class="branch-desc">Architecture, implementation details, and code examples</div>
+        </div>
+        <div class="branch-card" data-branch="business">
+          <div class="branch-title">💼 Business Value</div>
+          <div class="branch-desc">ROI, use cases, and customer success stories</div>
+        </div>
+        <div class="branch-card" data-branch="design">
+          <div class="branch-title">🎨 Design System</div>
+          <div class="branch-desc">Visual guidelines, components, and templates</div>
+        </div>
+        <div class="branch-card" data-branch="security">
+          <div class="branch-title">🔒 Security</div>
+          <div class="branch-desc">Compliance, encryption, and best practices</div>
+        </div>
+      </div>
+      
+      <div id="branch-result" style="margin-top: 1.5rem; padding: 1rem; background: var(--surface); border-radius: 8px; display: none;">
+        <strong>Selected:</strong> <span id="branch-name"></span>
+      </div>
+    </div>
+    
+    <!-- Slide 5: Data Filter -->
+    <div class="slide" data-slide="4">
+      <div class="eyebrow">Interactive Element #4</div>
+      <h2>Interactive Data</h2>
+      <p>Filter data to see different metrics.</p>
+      
+      <div class="filter-container">
+        <button class="filter-btn active" data-filter="revenue">Revenue</button>
+        <button class="filter-btn" data-filter="users">Users</button>
+        <button class="filter-btn" data-filter="growth">Growth</button>
+      </div>
+      
+      <div class="chart-container">
+        <canvas id="dataChart"></canvas>
+      </div>
+    </div>
+    
+    <!-- Slide 6: Summary -->
+    <div class="slide" data-slide="5">
+      <div class="eyebrow">Summary</div>
+      <h2>Interactive Elements Recap</h2>
+      
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-top: 2rem;">
+        <div style="background: var(--surface); padding: 1.5rem; border-radius: 12px;">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">📝</div>
+          <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Quizzes</div>
+          <div style="font-size: 0.95rem; color: var(--text-secondary);">Test knowledge and engage audience</div>
+        </div>
+        
+        <div style="background: var(--surface); padding: 1.5rem; border-radius: 12px;">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">📋</div>
+          <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Expandable Panels</div>
+          <div style="font-size: 0.95rem; color: var(--text-secondary);">Reveal details on demand</div>
+        </div>
+        
+        <div style="background: var(--surface); padding: 1.5rem; border-radius: 12px;">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔀</div>
+          <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Branch Selection</div>
+          <div style="font-size: 0.95rem; color: var(--text-secondary);">Let viewers choose their path</div>
+        </div>
+        
+        <div style="background: var(--surface); padding: 1.5rem; border-radius: 12px;">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+          <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Data Filters</div>
+          <div style="font-size: 0.95rem; color: var(--text-secondary);">Interactive charts and metrics</div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+  
+  <nav class="slide-dots" aria-label="Slide navigation"></nav>
+  <div class="slide-number" id="slideNumber">1 / 6</div>
+  
+  <script>
+    // === VIEWPORT SCALING ===
+    const SLIDE_W = 1280;
+    const SLIDE_H = 720;
+    const slidesWrapper = document.querySelector('.slides-wrapper');
+    const slides = document.querySelectorAll('.slide');
+    
+    function scaleToViewport() {
+      const scaleX = window.innerWidth / SLIDE_W;
+      const scaleY = window.innerHeight / SLIDE_H;
+      const scale = Math.min(scaleX, scaleY);
+      const offsetX = (window.innerWidth - SLIDE_W * scale) / 2;
+      const offsetY = (window.innerHeight - SLIDE_H * scale) / 2;
+      slidesWrapper.style.transform = `scale(${scale})`;
+      slidesWrapper.style.transformOrigin = '0 0';
+      slidesWrapper.style.left = offsetX + 'px';
+      slidesWrapper.style.top = offsetY + 'px';
+    }
+    
+    window.addEventListener('resize', scaleToViewport);
+    scaleToViewport();
+    
+    // === NAVIGATION ===
+    let currentSlide = 0;
+    const totalSlides = slides.length;
+    
+    function goToSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= totalSlides) index = totalSlides - 1;
+      
+      slides[currentSlide].classList.remove('active');
+      slides[index].classList.add('active');
+      currentSlide = index;
+      
+      document.querySelectorAll('.dot').forEach((d, i) => {
+        d.classList.toggle('active', i === index);
+      });
+      
+      document.getElementById('slideNumber').textContent = `${index + 1} / ${totalSlides}`;
+      document.getElementById('progressBar').style.width = ((index + 1) / totalSlides * 100) + '%';
+      
+      animateSlide(index);
+    }
+    
+    function nextSlide() { goToSlide(currentSlide + 1); }
+    function prevSlide() { goToSlide(currentSlide - 1); }
+    
+    // Build dots
+    function buildDots() {
+      const nav = document.querySelector('.slide-dots');
+      slides.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'dot' + (i === 0 ? ' active' : '');
+        dot.addEventListener('click', (e) => { e.stopPropagation(); goToSlide(i); });
+        nav.appendChild(dot);
+      });
+    }
+    buildDots();
+    
+    // Keyboard
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+    });
+    
+    // Click zones
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('button, .quiz-option, .expandable-header, .branch-card, .filter-btn')) return;
+      if (e.clientX > window.innerWidth / 2) nextSlide();
+      else prevSlide();
+    });
+    
+    // === ANIMATIONS ===
+    function animateSlide(index) {
+      const slide = slides[index];
+      const elements = slide.querySelectorAll('h1, h2, p, .quiz-container, .expandable-item, .branch-card, .filter-btn, .chart-container');
+      
+      gsap.fromTo(elements, 
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.6, stagger: 0.06, ease: 'power2.out', delay: 0.1 }
+      );
+    }
+    
+    animateSlide(0);
+    
+    // === QUIZ INTERACTION ===
+    document.querySelectorAll('.quiz-option').forEach(option => {
+      option.addEventListener('click', () => {
+        const isCorrect = option.dataset.correct === 'true';
+        const feedback = option.parentElement.parentElement.querySelector('.quiz-feedback');
+        
+        option.parentElement.querySelectorAll('.quiz-option').forEach(opt => {
+          opt.classList.remove('selected', 'correct', 'incorrect');
+        });
+        
+        option.classList.add('selected');
+        
+        if (isCorrect) {
+          option.classList.add('correct');
+          feedback.textContent = '✅ Correct! Web presentations work in any browser without installation.';
+          feedback.className = 'quiz-feedback correct';
+        } else {
+          option.classList.add('incorrect');
+          feedback.textContent = '❌ Not quite. Think about what makes Web presentations special.';
+          feedback.className = 'quiz-feedback incorrect';
+        }
+      });
+    });
+    
+    // === EXPANDABLE PANELS ===
+    document.querySelectorAll('.expandable-header').forEach(header => {
+      header.addEventListener('click', () => {
+        const item = header.parentElement;
+        const wasActive = item.classList.contains('active');
+        
+        // Close all
+        document.querySelectorAll('.expandable-item').forEach(i => {
+          i.classList.remove('active');
+        });
+        
+        // Open clicked if wasn't active
+        if (!wasActive) {
+          item.classList.add('active');
+        }
+      });
+    });
+    
+    // === BRANCH SELECTION ===
+    document.querySelectorAll('.branch-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.branch-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        
+        const result = document.getElementById('branch-result');
+        const branchName = document.getElementById('branch-name');
+        branchName.textContent = card.querySelector('.branch-title').textContent;
+        result.style.display = 'block';
+        
+        gsap.fromTo(result, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4 });
+      });
+    });
+    
+    // === DATA CHART ===
+    const chartData = {
+      revenue: {
+        labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+        data: [120, 180, 250, 320],
+        label: 'Revenue ($K)'
+      },
+      users: {
+        labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+        data: [5000, 8500, 15000, 22000],
+        label: 'Users'
+      },
+      growth: {
+        labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+        data: [15, 50, 76, 47],
+        label: 'Growth (%)'
+      }
+    };
+    
+    const ctx = document.getElementById('dataChart').getContext('2d');
+    let currentFilter = 'revenue';
+    
+    const chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: chartData[currentFilter].labels,
+        datasets: [{
+          label: chartData[currentFilter].label,
+          data: chartData[currentFilter].data,
+          backgroundColor: 'rgba(59, 130, 246, 0.7)',
+          borderColor: 'rgba(59, 130, 246, 1)',
+          borderWidth: 2,
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            labels: { color: '#f1f5f9' }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255,255,255,0.1)' },
+            ticks: { color: '#94a3b8' }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: '#94a3b8' }
+          }
+        }
+      }
+    });
+    
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const filter = btn.dataset.filter;
+        currentFilter = filter;
+        
+        chart.data.labels = chartData[filter].labels;
+        chart.data.datasets[0].data = chartData[filter].data;
+        chart.data.datasets[0].label = chartData[filter].label;
+        chart.update();
+      });
+    });
+    
+    // === REDUCED MOTION ===
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      gsap.globalTimeline.timeScale(0.01);
+    }
+  </script>
+</body>
+</html>

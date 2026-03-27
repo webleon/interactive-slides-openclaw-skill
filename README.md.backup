@@ -1,13 +1,13 @@
-# interactive-slides-openclaw-skill
+# interactive-slides
 
-A OpenClaw skill for creating interactive, animated web presentations.
+A Claude Code skill for creating interactive, animated web presentations — with 10 curated style presets, brand kit support, visual style discovery, a structured 6-phase workflow, and one-click fully-editable PowerPoint export.
 
 ## What it does
 
-Turns your content into a beautiful, self-contained HTML file that opens beautifully in any browser. Not a PowerPoint — something alive: animated, polished, and web-native. And when you need to hand it off or edit the text directly, export to a fully editable `.pptx` in seconds.
+Turns your content into a beautiful, self-contained HTML file that opens in any browser. Not a PowerPoint — something alive: animated, polished, and web-native. And when you need to hand it off or edit the text directly, export to a fully editable `.pptx` in seconds.
 
 **You get:**
-- A structured 6-phase discovery workflow (Discovery → Content → Mode → Build → Preview → Export)
+- A structured discovery workflow (audience → brand/style → outline → build → PPT export)
 - Brand kit support — bring your own colors, fonts, logo, PPT template, or Canva export
 - 10 hand-crafted visual presets to choose from if you don't have a brand kit
 - Three presentation modes: Slide Deck, Scroll Story, or Interactive Deck
@@ -18,21 +18,33 @@ Turns your content into a beautiful, self-contained HTML file that opens beautif
 ## Installation
 
 ### Requirements
-- OpenClaw CLI installed
-- Node.js (可选，用于 PPTX 导出)
+- [Claude Code](https://claude.ai/code) CLI installed
+- Node.js + `pptxgenjs` installed globally (for PPT export only):
+  ```bash
+  npm install -g pptxgenjs
+  ```
 
 ### Steps
-1. Skill 已位于：`~/.openclaw/workspace/skills/interactive-slides-openclaw-skill/`
-2. OpenClaw 会自动加载 workspace/skills/ 目录下的技能
+
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/sylvial928/interactive-slides.git
+   ```
+
+2. Copy the skill files into your Claude Code skills directory:
+   ```bash
+   cp -r interactive-slides/ ~/.claude/skills/interactive-slides/
+   ```
+
+3. That's it. Restart Claude Code (or start a new session) and the skill will be available.
 
 ### Verify it's installed
 
-Start a new OpenClaw session and ask:
+In Claude Code, type:
 ```
-Create an interactive presentation about X
+/interactive-slides
 ```
-
-OpenClaw will automatically pick up the skill based on the trigger phrases.
+Or just ask: *"Create an interactive presentation about X"* — Claude will automatically pick up the skill.
 
 ## Usage
 
@@ -44,11 +56,11 @@ Just describe what you want:
 
 > "Make a scroll-based story about our product roadmap"
 
-OpenClaw will walk you through discovery (audience, goal, delivery mode), ask about your brand kit or show style presets, confirm the slide structure, then build. After approval, it will offer a `.pptx` export.
+Claude will walk you through discovery (audience, goal, delivery mode), ask about your brand kit or show style presets, confirm the slide structure, then build. After approval, it will offer a `.pptx` export.
 
 ### Using a brand kit
 
-At the start of every session, OpenClaw will ask:
+At the start of every session, Claude will ask:
 
 > *"Do you have a brand kit or style guidelines you'd like to use — or should I show you a few preset styles to pick from?"*
 
@@ -65,32 +77,18 @@ Brand colors are applied to both the HTML presentation and the PPT export.
 
 ### Exporting to PowerPoint
 
-After the HTML is approved, OpenClaw will offer:
+After the HTML is approved, Claude will offer:
 
 > *"Would you like an editable .pptx version? All text will be directly editable in PowerPoint."*
 
 This generates a `build-deck.js` script and runs it to produce a `.pptx` file in the same directory. No manual steps required.
-
-## Output
-
-演示文稿输出到：`~/.openclaw/workspace/output/interactive-slides/`
-
-文件命名：`{YYYY-MM-DD}_{TOPIC}.html`
-
-示例：
-- `2026-03-27_q1-investor-update.html`
-- `2026-03-27_product-roadmap.html`
-- `2026-03-27_annual-report.html`
 
 ## File structure
 
 ```
 SKILL.md            # Main skill prompt and 6-phase workflow
 STYLE_PRESETS.md    # 10 visual presets with CSS variables and font pairings
-README.md           # This file
 evals/              # Evaluation cases for testing skill quality
-demo/               # Example presentations
-docs/               # Documentation
 ```
 
 ## License

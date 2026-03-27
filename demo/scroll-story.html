@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2025 Annual Report - Scroll Story Demo</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  
+  <style>
+    :root {
+      --bg: #0a0e27;
+      --text: #ffffff;
+      --accent: #00d4ff;
+      --surface: rgba(255,255,255,0.05);
+      --font-display: 'Playfair Display', serif;
+      --font-body: 'Inter', sans-serif;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html {
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+    }
+    
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+    }
+    
+    /* Progress Bar */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      z-index: 1000;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #7b2fff);
+      width: 0%;
+      transition: width 0.1s;
+    }
+    
+    /* Chapter Navigation */
+    .chapter-nav {
+      position: fixed;
+      right: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .chapter-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+      padding: 0;
+    }
+    
+    .chapter-dot:hover {
+      background: rgba(255,255,255,0.5);
+      transform: scale(1.2);
+    }
+    
+    .chapter-dot.active {
+      background: var(--accent);
+      transform: scale(1.4);
+    }
+    
+    /* Story Sections */
+    .story-section {
+      min-height: 100vh;
+      scroll-snap-stop: always;
+      scroll-snap-align: start;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 4rem;
+    }
+    
+    .story-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 30% 50%, rgba(0,212,255,0.1), transparent 50%);
+      pointer-events: none;
+    }
+    
+    .section-content {
+      max-width: 900px;
+      text-align: center;
+      z-index: 1;
+    }
+    
+    /* Typography */
+    .eyebrow {
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+    
+    h1 {
+      font-family: var(--font-display);
+      font-size: 5rem;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 2rem;
+      background: linear-gradient(135deg, #fff, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    h2 {
+      font-family: var(--font-display);
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+    
+    p {
+      font-size: 1.25rem;
+      line-height: 1.8;
+      color: rgba(255,255,255,0.8);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+    
+    .stat-card {
+      background: var(--surface);
+      padding: 2.5rem;
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .stat-number {
+      font-family: var(--font-display);
+      font-size: 4rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.6);
+    }
+    
+    /* Feature List */
+    .feature-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+      text-align: left;
+    }
+    
+    .feature-item {
+      background: var(--surface);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border-left: 3px solid var(--accent);
+    }
+    
+    .feature-title {
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    
+    .feature-desc {
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.7);
+    }
+    
+    /* Quote */
+    .quote-block {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-style: italic;
+      color: var(--text);
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    
+    .quote-author {
+      margin-top: 1.5rem;
+      font-size: 1.125rem;
+      color: var(--accent);
+      font-style: normal;
+    }
+    
+    /* Timeline */
+    .timeline {
+      position: relative;
+      margin-top: 3rem;
+      padding-left: 2rem;
+    }
+    
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--accent), transparent);
+    }
+    
+    .timeline-item {
+      position: relative;
+      padding-left: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -2rem;
+      top: 0.5rem;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 20px var(--accent);
+    }
+    
+    .timeline-year {
+      font-size: 0.875rem;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    
+    .timeline-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    
+    .timeline-desc {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.7);
+    }
+    
+    /* CTA Buttons */
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2.5rem;
+    }
+    
+    .btn {
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s;
+      display: inline-block;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #7b2fff);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0,212,255,0.3);
+    }
+    
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    
+    .btn-secondary:hover {
+      border-color: var(--text);
+    }
+    
+    /* Animation classes */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    
+    .fade-in.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <!-- Progress Bar -->
+  <div class="progress-bar">
+    <div class="progress-fill"></div>
+  </div>
+  
+  <!-- Chapter Navigation -->
+  <nav class="chapter-nav" aria-label="Chapter navigation"></nav>
+  
+  <!-- Section 1: Title -->
+  <section class="story-section" id="section-1">
+    <div class="section-content">
+      <div class="eyebrow fade-in">2025 Annual Report</div>
+      <h1 class="fade-in">Innovating<br>the Future</h1>
+      <p class="fade-in">A year of breakthrough innovations, strategic growth, and unwavering commitment to excellence.</p>
+    </div>
+  </section>
+  
+  <!-- Section 2: Key Stats -->
+  <section class="story-section" id="section-2">
+    <div class="section-content">
+      <div class="eyebrow fade-in">Year in Numbers</div>
+      <h2 class="fade-in">Record-Breaking Performance</h2>
+      <div class="stats-grid">
+        <div class="stat-card fade-in">
+          <div class="stat-number">+47%</div>
+          <div class="stat-label">Revenue Growth</div>
+        </div>
+        <div class="stat-card fade-in">
+          <div class="stat-number">2.5M</div>
+          <div class="stat-label">New Customers</div>
+        </div>
+        <div class="stat-card fade-in">
+          <div class="stat-number">98%</div>
+          <div class="stat-label">Customer Satisfaction</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Section 3: Achievements -->
+  <section class="story-section" id="section-3">
+    <div class="section-content">
+      <div class="eyebrow fade-in">Key Achievements</div>
+      <h2 class="fade-in">What We Accomplished</h2>
+      <div class="feature-list">
+        <div class="feature-item fade-in">
+          <div class="feature-title">🚀 Product Launch</div>
+          <div class="feature-desc">Released 3 major products that redefine industry standards</div>
+        </div>
+        <div class="feature-item fade-in">
+          <div class="feature-title">🌍 Global Expansion</div>
+          <div class="feature-desc">Entered 12 new markets across Asia, Europe, and Latin America</div>
+        </div>
+        <div class="feature-item fade-in">
+          <div class="feature-title">🏆 Industry Recognition</div>
+          <div class="feature-desc">Won 8 prestigious awards for innovation and design</div>
+        </div>
+        <div class="feature-item fade-in">
+          <div class="feature-title">💡 R&D Investment</div>
+          <div class="feature-desc">Increased R&D spending by 60% to $500M annually</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Section 4: Quote -->
+  <section class="story-section" id="section-4">
+    <div class="section-content">
+      <blockquote class="quote-block fade-in">
+        "This year wasn't just about growth—it was about building the foundation for the next decade of innovation."
+      </blockquote>
+      <div class="quote-author fade-in">— Sarah Chen, CEO</div>
+    </div>
+  </section>
+  
+  <!-- Section 5: Timeline -->
+  <section class="story-section" id="section-5">
+    <div class="section-content">
+      <div class="eyebrow fade-in">Our Journey</div>
+      <h2 class="fade-in">Milestones of 2025</h2>
+      <div class="timeline">
+        <div class="timeline-item fade-in">
+          <div class="timeline-year">Q1 2025</div>
+          <div class="timeline-title">Series C Funding</div>
+          <div class="timeline-desc">Raised $150M at $2B valuation</div>
+        </div>
+        <div class="timeline-item fade-in">
+          <div class="timeline-year">Q2 2025</div>
+          <div class="timeline-title">Product X Launch</div>
+          <div class="timeline-desc">Reached 1M users in first month</div>
+        </div>
+        <div class="timeline-item fade-in">
+          <div class="timeline-year">Q3 2025</div>
+          <div class="timeline-title">European Expansion</div>
+          <div class="timeline-desc">Opened offices in London, Berlin, Paris</div>
+        </div>
+        <div class="timeline-item fade-in">
+          <div class="timeline-year">Q4 2025</div>
+          <div class="timeline-title">Profitability Achieved</div>
+          <div class="timeline-desc">First profitable quarter in company history</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Section 6: CTA -->
+  <section class="story-section" id="section-6">
+    <div class="section-content">
+      <div class="eyebrow fade-in">Looking Ahead</div>
+      <h2 class="fade-in">The Future is Bright</h2>
+      <p class="fade-in">Join us on our mission to shape the future of technology and create lasting impact.</p>
+      <div class="cta-buttons">
+        <a href="#" class="btn btn-primary fade-in">Download Full Report</a>
+        <a href="#" class="btn btn-secondary fade-in">Contact Investor Relations</a>
+      </div>
+    </div>
+  </section>
+  
+  <script>
+    // === GSAP ScrollTrigger Setup ===
+    gsap.registerPlugin(ScrollTrigger);
+    
+    // === Progress Bar ===
+    const progressBar = document.querySelector('.progress-fill');
+    
+    function updateProgress() {
+      const scrolled = window.scrollY;
+      const max = document.body.scrollHeight - window.innerHeight;
+      const progress = (scrolled / max) * 100;
+      progressBar.style.width = Math.min(progress, 100) + '%';
+    }
+    
+    window.addEventListener('scroll', updateProgress);
+    
+    // === Chapter Navigation ===
+    const sections = document.querySelectorAll('.story-section');
+    const chapterNav = document.querySelector('.chapter-nav');
+    
+    sections.forEach((section, index) => {
+      const dot = document.createElement('button');
+      dot.className = 'chapter-dot' + (index === 0 ? ' active' : '');
+      dot.setAttribute('aria-label', `Go to chapter ${index + 1}`);
+      dot.addEventListener('click', () => {
+        section.scrollIntoView({ behavior: 'smooth' });
+      });
+      chapterNav.appendChild(dot);
+    });
+    
+    // === IntersectionObserver for Animations ===
+    const observerOptions = {
+      threshold: 0.3,
+      rootMargin: '0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          // Add active class to fade-in elements
+          entry.target.querySelectorAll('.fade-in').forEach((el, i) => {
+            setTimeout(() => {
+              el.classList.add('active');
+            }, i * 100);
+          });
+          
+          // Update chapter dots
+          const index = Array.from(sections).indexOf(entry.target);
+          document.querySelectorAll('.chapter-dot').forEach((dot, i) => {
+            dot.classList.toggle('active', i === index);
+          });
+        }
+      });
+    }, observerOptions);
+    
+    sections.forEach(section => observer.observe(section));
+    
+    // === GSAP Animations ===
+    sections.forEach((section, index) => {
+      const statCards = section.querySelectorAll('.stat-card');
+      const featureItems = section.querySelectorAll('.feature-item');
+      const timelineItems = section.querySelectorAll('.timeline-item');
+      
+      // Animate stat cards
+      if (statCards.length > 0) {
+        gsap.fromTo(statCards,
+          { opacity: 0, y: 50 },
+          {
+            opacity: 1, y: 0,
+            duration: 0.8,
+            stagger: 0.2,
+            scrollTrigger: {
+              trigger: section,
+              start: 'top center',
+              toggleActions: 'play none none reverse'
+            }
+          }
+        );
+      }
+      
+      // Animate feature items
+      if (featureItems.length > 0) {
+        gsap.fromTo(featureItems,
+          { opacity: 0, x: -30 },
+          {
+            opacity: 1, x: 0,
+            duration: 0.6,
+            stagger: 0.1,
+            scrollTrigger: {
+              trigger: section,
+              start: 'top center',
+              toggleActions: 'play none none reverse'
+            }
+          }
+        );
+      }
+      
+      // Animate timeline items
+      if (timelineItems.length > 0) {
+        gsap.fromTo(timelineItems,
+          { opacity: 0, x: -50 },
+          {
+            opacity: 1, x: 0,
+            duration: 0.7,
+            stagger: 0.15,
+            scrollTrigger: {
+              trigger: section,
+              start: 'top center',
+              toggleActions: 'play none none reverse'
+            }
+          }
+        );
+      }
+    });
+    
+    // === Reduced Motion ===
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      gsap.globalTimeline.timeScale(0.01);
+      document.querySelectorAll('.fade-in').forEach(el => {
+        el.classList.add('active');
+      });
+    }
+  </script>
+</body>
+</html>
